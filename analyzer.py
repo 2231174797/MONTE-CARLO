@@ -40,6 +40,36 @@ def analyze(self):
         
 if __name__ == "__main__":
 
+    for p in self.genparticles:
+    
+        p4 = p.p4 # access to the Lorentzvector (see ROOT manual)
+        pdgId = p.pdgId # particle ID for the paricle (muon = 13, Higgs = 25) http://pdg.lbl.gov/2007/reviews/montecarlorpp.pdf
+
+        # fill eta and pt histograms for muons only
+        if abs(pdgId) == 13:
+            
+            gen_mux_pt.Fill(p4.Pt())
+            gen_mux_eta.Fill(p4.Eta())
+
+        
+    # now we try to reconstruct the 4 leptons to the Higgs mass
+    # we make an empty Lorentzvector and add all the muons to it
+    higgs = ROOT.TLorentzVector()
+    genMuFound = 0 # we need exactly 4 muons
+    for p in self.genparticles:
+
+        if abs(p.pdgId) != 13: continue
+        genMuFound += 1
+        higgs += p.p4
+
+
+    if genMuFound == 4:
+
+        #print higgs.M() 
+        gen_massx_h.Fill(higgs.M())
+        
+        
+if __name__ == "__main__":
     c.Analyzer.analyze = analyze # override # do not remove
 
     ##### INITIALIZATION: define the file and event loop settings (see comments)
@@ -59,7 +89,9 @@ if __name__ == "__main__":
     gen_mass_h = ROOT.TH1D("gen_mass_h", "Reconstructed Higgs mass (gen)", 50, 100, 150) # bins of 1 GeV
     gen_mu_pt = ROOT.TH1D("gen_mu_pt", "Muon pt (gen)", 50, 0, 500) # bins of 10 GeV
     gen_mu_eta = ROOT.TH1D("gen_mu_eta", "Eta distribution of muons (gen)", 100, -5, 5) # bins of .1 in eta
-
+    gen_massx_h = ROOT.TH1D("gen_massx_h", "Reconstructed Higgs mass (gen)", 50, 100, 150) # bins of 1 GeV
+    gen_mux_pt = ROOT.TH1D("gen_mux_pt", "Muon pt (gen)", 50, 0, 500) # bins of 10 GeV
+    gen_mux_eta = ROOT.TH1D("gen_mux_eta", "Eta distribution of muons (gen)", 100, -5, 5) # bins of .1 in eta
     ##### LOOP OVER ALL THE EVENTS
     # loop over all the events and execute the code in the analyze() function as defined above
     analyzer.loop()
@@ -70,5 +102,8 @@ if __name__ == "__main__":
     gen_mass_h.Write()
     gen_mu_eta.Write()
     gen_mu_pt.Write()
-
+    gen_massx_h.Write()
+    gen_mux_eta.Write()
+    gen_mux_pt.Write()
+    
     fOut.Close()
